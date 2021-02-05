@@ -1,7 +1,53 @@
-from random import randint
+from random import randint, randrange
+from typing import List, Optional
+
+WEST = 0
+NORTH = 1
+EAST = 2
+SOUTH = 3
 
 
-class Maze:
+class MazeMap:
+    width: int
+    height: int
+    map: List[List[str]]
+
+    def __init__(self, width: int, height: int):
+        self.maze_image = [['' for _ in range(0, height)] for _ in range(0, width)]
+        for x in range(0, width):
+            self.maze_image[x][0] = '#'
+        self.width = width
+        self.height = height
+
+    def is_wall(self, col: int, row: int) -> bool:
+        return self.map[col][row] == '#'
+
+    def passages(self, col: int, row: int, cur_dir: Optional[int] = None) -> List[int]:
+        pass_list = list()
+        if col - 1 != 0 and not self.is_wall(col - 1, row):
+            if cur_dir is None or cur_dir != EAST:
+                pass_list.append(WEST)
+        if row - 1 != 0 and not self.is_wall(col, row - 1):
+            if cur_dir is None or cur_dir != SOUTH:
+                pass_list.append(NORTH)
+        if col + 1 < self.width and not self.is_wall(col + 1, row):
+            if cur_dir is None or cur_dir != WEST:
+                pass_list.append(EAST)
+        if row + 1 < self.height and not self.is_wall(col, row + 1):
+            if cur_dir is None or cur_dir != NORTH:
+                pass_list.append(SOUTH)
+
+        # Allow double back if it is the way we came from is the only possible direction
+        if len(pass_list) == 0:
+            return self.passages(col, row)
+
+        return pass_list
+
+    def getRandCell(self):
+        return randrange(1, self.width, 2), randrange(1, self.height, 2)
+
+
+class MazeGenerator:
     BOTH_WALLS = 0
     HORIZONTAL_WALL = 1
     VERTICAL_WALL = 2
@@ -9,7 +55,8 @@ class Maze:
 
     wall_map = list()
     mapped_cells = set()
-    maze_image = list()
+
+    maze_image: MazeMap
 
     column = 0
     row = 0
@@ -17,24 +64,27 @@ class Maze:
     height = 0
     total_cells = 0
 
-    def __init__(self, width=39, height=12):
-        self.width = width
-        self.height = height
+    def __init__(self, width=79, height=13):
+        if width % 2 == 0 or height % 2 == 0:
+            raise ValueError("The width and height parameters need to be odd.")
+
+        self.maze_image = MazeMap(width, height)
+        self.width = (width - 1) // 2
+        self.height = (height - 2) // 2
         self.total_cells = self.width * self.height
         self.generate()
 
     def render(self):
-        self.maze_image = list()
-        self.maze_image.append("#" * ((self.width * 2) + 1))
         for row in range(0, self.height):
-            row_str1 = '#'
-            row_str2 = '#'
+            self.maze_image.map[0][(row * 2) + 1] = '#'
             for column in range(0, self.width):
                 walls = self.wall_map[column][row]
-                row_str1 += " #" if walls == self.BOTH_WALLS or walls == self.VERTICAL_WALL else "  "
-                row_str2 += "##" if walls == self.BOTH_WALLS or walls == self.HORIZONTAL_WALL else " #"
-            self.maze_image.append(row_str1)
-            self.maze_image.append(row_str2)
+                v_wall = '#' if walls == self.BOTH_WALLS or walls == self.VERTICAL_WALL else ' '
+                h_wall = '#' if walls == self.BOTH_WALLS or walls == self.HORIZONTAL_WALL else ' '
+                self.maze_image.map[(column * 2) + 1][(row * 2) + 1] = ' '
+                self.maze_image.map[(column * 2) + 2][(row * 2) + 1] = v_wall
+                self.maze_image.map[(column * 2) + 1][(row * 2) + 2] = h_wall
+                self.maze_image.map[(column * 2) + 2][(row * 2) + 2] = '#'
 
     def generate(self):
         wall_map = list()
@@ -153,6 +203,9 @@ class Maze:
 
     def __str__(self):
         s = ''
-        for row in self.maze_image:
-            s += row + '\n'
+
+        for row in range(0, (self.height * 2) + 1):
+            for col in range(0, (self.width * 2) + 1):
+                s += self.maze_image.map[col][row]
+            s += '\n'
         return s
