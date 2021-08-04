@@ -5,7 +5,8 @@ from pygame.surface import Surface
 
 from maze.cats import Cats
 from maze.config import BACKGROUND_COLOR, PLAY_WIDTH, PLAY_HEIGHT, MAZE_HEIGHT, MAZE_WIDTH, TILE_WIDTH, TILE_HEIGHT, \
-    SURFACE_WIDTH, SURFACE_HEIGHT, WIDTH_CENTER, HEIGHT_CENTER, WINDOW_RIGHT_MAX, WINDOW_BOTTOM_MAX
+    SURFACE_WIDTH, SURFACE_HEIGHT, WIDTH_CENTER, HEIGHT_CENTER, WINDOW_RIGHT_MAX, WINDOW_BOTTOM_MAX, RIGHT_SCROLL_LIM, \
+    LEFT_SCROLL_LIM, MID_PLAY_WIDTH, BOT_SCROLL_LIM, TOP_SCROLL_LIM, MID_PLAY_HEIGHT
 from maze.dog import Dog
 from maze.game_state import GameState
 from maze.mouse import Mouse
@@ -56,42 +57,26 @@ class Maze(object):
 
     def update(self) -> bool:
         pass
-        # if self.mouse.sprite is None:
-        #     return False  # Out of lives - so game is over
-        # if self.cheeses.is_empty:
-        #     return False  # Level completed
-        #
-        # self.cheeses.update()
-        # self.bones.update()
-        # self.dog.update()
-        # self.cats.update()
-        # self.mouse.update()
-        # return True
 
     def draw(self, surface: Surface, dest_rect: Rect,
              dog_location: Union[Rect, None], mouse_location: Union[Rect, None]):
-        # self.cheeses.draw(self.surface)
-        # self.bones.draw(self.surface)
-        # self.dog.draw(self.surface)
-        # self.cats.draw(self.surface)
-        # self.mouse.draw(self.surface)
 
         critter_location = (dog_location if dog_location is not None else
                             (mouse_location if mouse_location is not None else self.last_rect))
 
         rect = self.rect.copy()
-        if 3072 > critter_location.left > 159:
-            rect.left = critter_location.left - 159
-        elif critter_location.left < 160:
+        if RIGHT_SCROLL_LIM > critter_location.left > LEFT_SCROLL_LIM:
+            rect.left = critter_location.left - LEFT_SCROLL_LIM
+        elif critter_location.left < MID_PLAY_WIDTH:
             rect.left = 0
         else:
-            rect.left = 3072 - 160
+            rect.left = RIGHT_SCROLL_LIM - MID_PLAY_WIDTH
 
-        if 3072 > critter_location.top > 159:
-            rect.top = critter_location.top - 159
-        elif critter_location.top < 160:
+        if BOT_SCROLL_LIM > critter_location.top > TOP_SCROLL_LIM:
+            rect.top = critter_location.top - TOP_SCROLL_LIM
+        elif critter_location.top < MID_PLAY_HEIGHT:
             rect.top = 0
         else:
-            rect.top = 3072 - 160
+            rect.top = BOT_SCROLL_LIM - MID_PLAY_HEIGHT
 
         surface.blit(self.surface, dest_rect, rect)
