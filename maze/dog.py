@@ -9,7 +9,7 @@ from maze.tiles import Tiles
 from maze.cats import Cats, Cat
 from maze.maze_generate import MazeMap, WEST, EAST, NORTH, SOUTH, Point
 from maze.mouse import Mouse, TheMouse
-from maze.sprites import Critter
+from maze.critters import Critter
 
 
 class TheDog(Critter):

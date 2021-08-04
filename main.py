@@ -4,6 +4,7 @@ from typing import List
 import pygame
 
 from maze.maze_generate import MazeGenerator, MazeMap
+from maze.maze_game import MazeGame as Game
 
 
 class MazeGame:
@@ -113,7 +114,7 @@ class MazeGame:
 
 
 def main():
-    MazeGame().main_loop()
+    Game().game_loop()
 
 
 # Press the green button in the gutter to run the script.

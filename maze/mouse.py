@@ -1,5 +1,5 @@
-from random import randrange, randint, choice
-from typing import Tuple, List, Optional
+from random import choice
+from typing import Tuple, Optional
 
 from pygame.rect import Rect
 from pygame.sprite import GroupSingle
@@ -7,8 +7,8 @@ from pygame.surface import Surface
 
 from maze.tiles import Tiles
 from maze.game_state import GameState
-from maze.maze_generate import MazeMap, Point
-from maze.sprites import Critter
+from maze.maze_generate import MazeMap
+from maze.critters import Critter
 
 
 class TheMouse(Critter):
@@ -23,26 +23,56 @@ class TheMouse(Critter):
 class Mouse(GroupSingle):
     count: int
     tiles: Tuple[Surface, Rect, Rect, Rect, Rect]
-    map: MazeMap
-    game_state: GameState
 
-    def __init__(self, game_state: GameState, tiles: Tiles, maze_map: MazeMap):
-        super(Mouse, self).__init__()
-        self.map = maze_map
-        self.game_state = game_state
+    def __init__(self, tiles: Tiles, maze_map: MazeMap):
         self.tiles = tiles.mice
+        super(Mouse, self).__init__(TheMouse(maze_map, self.tiles))
 
-    def update(self, *args, **kwargs) -> None:
+    def update(self, *args, **kwargs) -> bool:
         if self.sprite is None:
-            if self.game_state.next_life():
-                self.add(TheMouse(self.map, self.tiles))
+            return False
         super(Mouse, self).update()
+        return True
 
-    def mouse_reset(self):
-        self.add(TheMouse(self.map, self.tiles))
+    def mouse_reset(self, maze_map: MazeMap):
+        self.add(TheMouse(maze_map, self.tiles))
 
     def get_location(self) -> Optional[Rect]:
         if self.sprite:
             assert isinstance(self.sprite, TheMouse)
             return self.sprite.rect.copy()
         return None
+
+    @property
+    def current_loc(self):
+        if self.sprite:
+            assert isinstance(self.sprite, TheMouse)
+            return self.sprite.current_loc
+        else:
+            return 0, 0
+
+    def move(self, maze_map: MazeMap, x: int, y: int, s_dir: int):
+        s = self.sprite
+        if s:
+            assert isinstance(s, TheMouse)
+            if s.in_transit:
+                return
+            dir_funcs = [s.move_north, s.move_east, s.move_south, s.move_west]
+            if not maze_map.is_wall(x, y):
+                dir_funcs[s_dir]()
+
+    def move_up(self, maze_map: MazeMap):
+        x, y = self.current_loc
+        self.move(maze_map, x, y - 1, 0)
+
+    def move_down(self, maze_map: MazeMap):
+        x, y = self.current_loc
+        self.move(maze_map, x, y + 1, 2)
+
+    def move_left(self, maze_map: MazeMap):
+        x, y = self.current_loc
+        self.move(maze_map, x - 1, y, 3)
+
+    def move_right(self, maze_map: MazeMap):
+        x, y = self.current_loc
+        self.move(maze_map, x + 1, y, 1)

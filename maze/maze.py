@@ -9,7 +9,7 @@ from maze.config import BACKGROUND_COLOR, PLAY_WIDTH, PLAY_HEIGHT, MAZE_HEIGHT, 
 from maze.dog import Dog
 from maze.game_state import GameState
 from maze.mouse import Mouse
-from maze.sprites import ItemGroup
+from maze.items import ItemGroup
 from maze.tiles import Tiles
 from maze.maze_generate import MazeGenerator, MazeMap, Point
 
@@ -40,6 +40,7 @@ class Maze(object):
         self.tiles = tiles
         self.wall = self.tiles.wall
         self.background = self.tiles.ground
+        self.last_rect = Rect(0, 0, 0, 0)
 
     def new_maze(self, maze: MazeMap):
         # Generate new maze and render it into the maze surface
@@ -79,19 +80,18 @@ class Maze(object):
                             (mouse_location if mouse_location is not None else self.last_rect))
 
         rect = self.rect.copy()
-        if critter_location == self.last_rect:
-            rect = self.last_rect
+        if 3072 > critter_location.left > 159:
+            rect.left = critter_location.left - 159
+        elif critter_location.left < 160:
+            rect.left = 0
         else:
-            x = critter_location.centerx - WIDTH_CENTER
-            x = max(x, 0)
-            x = min(x, WINDOW_RIGHT_MAX)
+            rect.left = 3072 - 160
 
-            y = critter_location.centery - HEIGHT_CENTER
-            y = max(y, 0)
-            y = min(y, WINDOW_BOTTOM_MAX)
-
-            rect.left = x
-            rect.top = y
-            self.last_rect = rect
+        if 3072 > critter_location.top > 159:
+            rect.top = critter_location.top - 159
+        elif critter_location.top < 160:
+            rect.top = 0
+        else:
+            rect.top = 3072 - 160
 
         surface.blit(self.surface, dest_rect, rect)

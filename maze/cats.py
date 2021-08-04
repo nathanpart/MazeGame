@@ -8,7 +8,7 @@ from pygame.surface import Surface
 from maze.tiles import Tiles
 from maze.maze_generate import MazeMap, EAST, WEST, NORTH, SOUTH, Point
 from maze.mouse import Mouse, TheMouse
-from maze.sprites import Critter
+from maze.critters import Critter
 
 
 def eat_mouse(mouse: TheMouse):
