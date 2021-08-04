@@ -1,3 +1,4 @@
+from functools import total_ordering
 from random import randint, randrange
 from typing import List, Optional
 
@@ -7,15 +8,40 @@ EAST = 2
 SOUTH = 3
 
 
+@total_ordering
+class Point:
+    col: int
+    row: int
+
+    def __init__(self, col: int, row: int):
+        self.col = col
+        self.row = row
+
+    def here(self, col: int, row: int) -> bool:
+        return self.col == col and self.row == row
+
+    def __eq__(self, other):
+        return self.col == other.col and self.row == other.row
+
+    def __gt__(self, other):
+        return (self.row == other.row and self.col > other.col) or self.row > other.row
+
+
 class MazeMap:
     width: int
     height: int
     map: List[List[str]]
 
     def __init__(self, width: int, height: int):
-        self.maze_image = [['' for _ in range(0, height)] for _ in range(0, width)]
-        for x in range(0, width):
-            self.maze_image[x][0] = '#'
+        self.map = [['.' for _ in range(0, height + 1)] for _ in range(0, width + 1)]
+
+        for x in range(0, width + 1):
+            if x == 0 or x == width:
+                for y in range(0, height + 1):
+                    self.map[x][y] = '#'
+                    continue
+            self.map[x][0] = '#'
+            self.map[x][height] = '#'
         self.width = width
         self.height = height
 
@@ -43,8 +69,20 @@ class MazeMap:
 
         return pass_list
 
-    def getRandCell(self):
-        return randrange(1, self.width, 2), randrange(1, self.height, 2)
+    def get_rand_cell(self) -> Point:
+        point = Point(0, 0)
+        while self.map[point.col][point.row] == '#':
+            point.col = randrange(1, self.width)
+            point.row = randrange(1, self.height)
+        return point
+
+    def __str__(self) -> str:
+        s = ''
+        for row in range(0, len(self.map[0])):
+            for col in range(0, len(self.map)):
+                s += self.map[col][row]
+            s += "\n"
+        return super().__str__()
 
 
 class MazeGenerator:
@@ -68,15 +106,14 @@ class MazeGenerator:
         if width % 2 == 0 or height % 2 == 0:
             raise ValueError("The width and height parameters need to be odd.")
 
-        self.maze_image = MazeMap(width, height)
+        self.maze_image = MazeMap(width - 1, height - 1)
         self.width = (width - 1) // 2
-        self.height = (height - 2) // 2
+        self.height = (height - 1) // 2
         self.total_cells = self.width * self.height
         self.generate()
 
     def render(self):
         for row in range(0, self.height):
-            self.maze_image.map[0][(row * 2) + 1] = '#'
             for column in range(0, self.width):
                 walls = self.wall_map[column][row]
                 v_wall = '#' if walls == self.BOTH_WALLS or walls == self.VERTICAL_WALL else ' '
@@ -204,8 +241,8 @@ class MazeGenerator:
     def __str__(self):
         s = ''
 
-        for row in range(0, (self.height * 2) + 1):
-            for col in range(0, (self.width * 2) + 1):
+        for row in range(0, len(self.maze_image.map[0])):
+            for col in range(0, len(self.maze_image.map)):
                 s += self.maze_image.map[col][row]
             s += '\n'
         return s

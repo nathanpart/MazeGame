@@ -5,28 +5,16 @@ from pygame.rect import Rect
 from pygame.sprite import GroupSingle
 from pygame.surface import Surface
 
-from maze.Tiles import Tiles
+from maze.tiles import Tiles
 from maze.cats import Cats, Cat
-from maze.mazegenerate import MazeMap, WEST, EAST, NORTH, SOUTH
+from maze.maze_generate import MazeMap, WEST, EAST, NORTH, SOUTH, Point
 from maze.mouse import Mouse, TheMouse
 from maze.sprites import Critter
 
 
-class WayPoint:
-    col: int
-    row: int
-
-    def __init__(self, col: int, row: int):
-        self.col = col
-        self.row = row
-
-    def at_way(self, col: int, row: int) -> bool:
-        return self.col == col and self.row == row
-
-
 class TheDog(Critter):
     chased_cat: Optional[Cat]
-    way_points: List[WayPoint]
+    way_points: List[Point]
     search_time: int
 
     @property
@@ -38,7 +26,7 @@ class TheDog(Critter):
         super(TheDog, self).__init__(maze_map, tiles, *group)
         self.chased_cat = cat
 
-        self.way_points = [WayPoint(cat.column, cat.row)]
+        self.way_points = [Point(cat.column, cat.row)]
         self.speed = 4
 
         if self.is_chasing:
@@ -70,16 +58,16 @@ class TheDog(Critter):
                 else:
                     # Cat detected - the chase is on
                     self.chased_cat = kitty
-                    self.way_points = [WayPoint(kitty.column, kitty.row)]
+                    self.way_points = [Point(kitty.column, kitty.row)]
 
             if self.is_chasing:
                 # Track chased cat
-                cat_way_point = WayPoint(self.chased_cat.column, self.chased_cat.row)
+                cat_way_point = Point(self.chased_cat.column, self.chased_cat.row)
                 if cat_way_point != self.way_points[-1]:
                     self.way_points.append(cat_way_point)
 
                 # If we reach the a way point remove it
-                if self.way_points[0].at_way(self.column, self.row):
+                if self.way_points[0].here(self.column, self.row):
                     del self.way_points[0]
 
                     # If we removed the last way point we have reached the cat so we eat it
@@ -121,7 +109,7 @@ class Dog(GroupSingle):
     chased_cat: Optional[Cat]
 
     def __init__(self, tiles: Tiles, maze_map: MazeMap, mouse: Mouse, cats: Cats):
-        super(Dog, self).__init__()
+        super(Dog, self).__init__(None)
         self.tiles_dog = tiles.dogs
         self.map = maze_map
         self.cat_chase = False
@@ -174,3 +162,9 @@ class Dog(GroupSingle):
         else:
             chased_cat = None
         return chased_cat
+
+    def get_location(self) -> Optional[Rect]:
+        if self.sprite:
+            assert isinstance(self.sprite, TheMouse)
+            return self.sprite.rect.copy()
+        return None

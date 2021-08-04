@@ -1,50 +1,53 @@
-from typing import List
+from typing import Tuple
 
-from pygame import Rect
+import pygame
+from pygame import Rect, Color
 from pygame.surface import Surface
+from pygame.time import Clock
 
-from maze.Tiles import Tiles
-from maze.mazegenerate import MazeGenerator
+from maze.cats import Cats
+from maze.dog import Dog
+from maze.game_state import GameState
+from maze.maze import Maze
+from maze.maze_generate import MazeGenerator, NORTH
+from maze.mouse import Mouse
+from maze.tiles import Tiles
 
 
 class MazeGame:
-    maze: Surface
-    background: Surface
-    wall: Surface
-    maze_generator: MazeGenerator
-    map: List[List[str]]
-    maze_width: int
-    maze_height: int
+    maze: Maze
+    cats: Cats
+    dog: Dog
+    mouse: Mouse
 
+    game_state: GameState
     tiles: Tiles
-    background_color = (156, 102, 47)
+    generator: MazeGenerator
+    mouse_tile: Surface
+    mouse_recs: Tuple[Rect]
+
+    size = 320, 352
+    background = Color(156, 102, 47)
+    screen: Surface
+    clock: Clock
 
     def __init__(self):
-        self.maze_width = 101
-        self.maze_height = 101
+        pygame.init()
 
-        maze = Surface((self.maze_width * 32, self.maze_height * 32))
-        maze.fill(self.background_color)
-
+        background = self.background
         self.tiles = Tiles()
-        self.wall = self.tiles.wall
-        self.background = self.tiles.ground
+        self.generator = MazeGenerator(101, 101)
 
-        self.maze_generator = MazeGenerator(self.maze_width, self.maze_height)
+        self.mouse_tile, *self.mouse_recs = self.tiles.mice
+        self.game_state = GameState(background, self.mouse_tile.subsurface(self.mouse_recs[NORTH]), self.tiles.bone)
 
-    def new_maze(self):
-        self.maze_generator.generate()
-        self.map = self.maze_generator.maze_image
+        self.mouse = Mouse(self.game_state, self.tiles, self.generator.maze_image)
+        self.cats = Cats(self.tiles, self.generator.maze_image, 15, self.mouse)
+        self.dog = Dog(self.tiles, self.generator.maze_image, self.mouse, self.cats)
 
-        for row in range(0, self.maze_height):
-            for column in range(0, self.maze_width):
-                rect = Rect(column * 32, row * 32, 32, 32)
-                if self.map[column][row] == '#':
-                    self.maze.blit(self.wall, rect)
-                else:
-                    self.maze.blit(self.background, rect)
-
-
+        self.screen = pygame.display.set_mode(self.size)
+        self.screen.fill(background)
+        self.clock = Clock()
 
 
 

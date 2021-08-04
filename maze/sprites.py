@@ -1,12 +1,13 @@
-from random import randrange
-from typing import Tuple, Optional, List
+from typing import Tuple, Union, Sequence, List
 
 import pygame
 from pygame.rect import Rect
-from pygame.sprite import AbstractGroup
+from pygame.sprite import AbstractGroup, Group, Sprite
 from pygame.surface import Surface
 
-from maze.mazegenerate import WEST, NORTH, EAST, SOUTH, MazeMap
+from maze.game_state import GameState
+from maze.maze_generate import WEST, NORTH, EAST, SOUTH, MazeMap, Point
+from maze.mouse import TheMouse
 
 
 class MazeSprite(pygame.sprite.Sprite):
@@ -97,25 +98,62 @@ class Critter(MazeSprite):
 
 
 class Item(MazeSprite):
+    game_state: GameState
+    score_func: str
 
-    def __init__(self, maze_map: MazeMap, tile: Surface, *groups):
+    def __init__(self, col: int, row: int, game_state: GameState, score_func: str,
+                 maze_map: MazeMap, tile: Surface, *groups):
         super().__init__(maze_map, *groups)
         self.image = tile
+        self.column = col
+        self.row = row
+        self.game_state = game_state
+        self.score_func = score_func
 
-    def place_in_cell(self, cell_x, cell_y, cell_map: Optional[List[List[str]]] = None):
-        col = (cell_x * 2) + 1
-        row = (cell_y * 2) + 1
+    def update(self, *args, **kwargs) -> None:
+        mouse = args[0]
+        assert isinstance(mouse, TheMouse)
+        if self.column == mouse.column and self.row == mouse.row:
+            if hasattr(self.game_state, self.score_func):
+                getattr(self.game_state, self.score_func)()
+            else:
+                raise AttributeError("Game state does not have method %s" % self.score_func)
+            self.kill()
 
-        if cell_map is None:
-            self.column = col
-            self.row = row
-            return
 
-        options = [(col, row)]
-        if cell_map[col + 1][row] == ' ':
-            options.append((col + 1, row))
-        if cell_map[col][row + 1] == ' ':
-            options.append((col, row + 1))
+class ItemGroup(Group):
+    game_state: GameState
+    score_fund: str
+    item_count: int
+    tile: Surface
+    map: MazeMap
 
-        selection = randrange(0, len(options)) if len(options) > 1 else 0
-        self.column, self.row = options[selection]
+    def __init__(self, game_state: GameState, score_func: str, item_count: int,
+                 maze_map: MazeMap, tile: Surface, *sprites: Union[Sprite, Sequence[Sprite]]) -> None:
+        super().__init__(*sprites)
+        self.game_state = game_state
+        self.score_fund = score_func
+        self.item_count = item_count
+        self.map = maze_map
+        self.tile = tile
+
+    def new_game(self, exclude_list: List[Point]):
+        self.empty()
+        for _ in range(0, self.item_count):
+            new_point = self.map.get_rand_cell()
+            while new_point in exclude_list:
+                new_point = self.map.get_rand_cell()
+            item = Item(new_point.col, new_point.row, self.game_state, self.score_fund, self.map, self.tile)
+            self.add(item)
+            exclude_list.append(new_point)
+
+    def item_locations(self) -> List[Point]:
+        item_list = list()
+        for item in self.sprites():
+            assert isinstance(item, Item)
+            item_list.append(Point(item.column, item.row))
+        return item_list
+
+    @property
+    def is_empty(self) -> bool:
+        return len(self.sprites()) == 0

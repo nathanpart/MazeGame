@@ -1,27 +1,37 @@
-from random import randrange, randint, choice
+from random import randint, choice
 from typing import Tuple, List, Optional
 
 from pygame.rect import Rect
 from pygame.sprite import Group
 from pygame.surface import Surface
 
-from maze.Tiles import Tiles
-from maze.mazegenerate import MazeMap, EAST, WEST, NORTH, SOUTH
-from maze.mouse import TheMouse
+from maze.tiles import Tiles
+from maze.maze_generate import MazeMap, EAST, WEST, NORTH, SOUTH, Point
+from maze.mouse import Mouse, TheMouse
 from maze.sprites import Critter
+
+
+def eat_mouse(mouse: TheMouse):
+    mouse.kill()
 
 
 class Cat(Critter):
     activity: int
     is_chased: bool
-    mouse: Optional[TheMouse]
+    mouse_group: Optional[Mouse]
 
-    def __init__(self, mouse: TheMouse, maze_map: MazeMap,
+    def __init__(self, mouse: Mouse, maze_map: MazeMap,
                  critter_tiles: Tuple[Surface, Rect, Rect, Rect, Rect], *sprites):
-        self.mouse = mouse
+        self.mouse_group = mouse
         super().__init__(maze_map, critter_tiles, *sprites)
 
     def update(self):
+        mouse = self.mouse_group.sprite
+        if mouse is None:
+            return              # Player is either between lives after being ate. Or in game over state
+
+        assert isinstance(mouse, TheMouse)
+
         if not self.in_transit:
             if self.is_chased:
                 self.direction = choice(self.map.passages(self.column, self.row, self.direction))
@@ -36,13 +46,9 @@ class Cat(Critter):
                 if self.speed != 0:
                     self.direction = choice(self.map.passages(self.column, self.row))
                     self.in_transit = True
-        if self.column == self.mouse.column and self.row == self.mouse.row:
-            self.eat_mouse()
+        if self.column == mouse.column and self.row == mouse.row:
+            eat_mouse(mouse)
         super().update()
-
-    def eat_mouse(self):
-        self.mouse.kill()
-        self.mouse = None
 
     def chased(self, dog_col: int, dog_row: int):
         self.is_chased = True
@@ -74,9 +80,9 @@ class Cats(Group):
     cell_width: int
     cell_height: int
     map: MazeMap
-    mouse: TheMouse
+    mouse: Mouse
 
-    def __init__(self, tiles: Tiles, maze_map: MazeMap, count: int, mouse: TheMouse, *sprites):
+    def __init__(self, tiles: Tiles, maze_map: MazeMap, count: int, mouse: Mouse, *sprites):
         super(Cats, self).__init__()
         self.add(*sprites)
         self.count = count
@@ -84,14 +90,19 @@ class Cats(Group):
         self.map = maze_map
         self.mouse = mouse
 
-    def reset(self):
+    def reset(self, exclude_list: List[Point]):
         self.empty()
-        for i in range(0, self.count):
-            cat = Cat(self.mouse, self.map, self.cats, self)
-            cat.column, cat.row = self.map.getRandCell()
-            cat.row = randrange(11, self.cell_height, 2)
-
+        for _ in range(0, self.count):
+            cat = Cat(self.mouse, self.map, self.cats)
+            self.add(cat)
+            new_point = self.map.get_rand_cell()
+            while new_point in exclude_list or new_point < Point(20, 30):
+                new_point = self.map.get_rand_cell()
+            cat.column = new_point.col
+            cat.row = new_point.row
             cat.speed = 1
+
+            exclude_list.append(new_point)
 
     def here_kitty_kitty(self) -> List[Tuple[Cat, int, int]]:
         locs = list()
@@ -99,3 +110,10 @@ class Cats(Group):
             if isinstance(cat, Cat):
                 locs.append((cat, cat.column, cat.row))
         return locs
+
+    def ate_the_mouse(self):
+        pass
+
+    def update(self, *args, **kwargs) -> None:
+
+        super().update(*args, **kwargs)
