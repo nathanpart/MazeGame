@@ -6,32 +6,13 @@ from pygame.surface import Surface
 from pygame.time import Clock
 
 from maze.cats import Cats
+from maze.config import BOARD_WIDTH, BOARD_HEIGHT
 from maze.dog import Dog
 from maze.game_state import GameState
 from maze.maze import Maze
 from maze.maze_generate import MazeGenerator, NORTH
 from maze.mouse import Mouse
 from maze.tiles import Tiles
-
-# Size of the maze
-MAZE_WIDTH = 101
-MAZE_HEIGHT = 101
-
-# Size of a tile
-TILE_WIDTH = 32
-TILE_HEIGHT = 32
-
-# Size of the game play area
-PLAY_WIDTH = 10 * TILE_WIDTH
-PLAY_HEIGHT = 10 * TILE_HEIGHT
-
-# Size of the score/state area
-HEAD_WIDTH = 10 * TILE_WIDTH
-HEAD_HEIGHT = TILE_HEIGHT
-
-# Size of the game window
-BOARD_WIDTH = PLAY_WIDTH
-BOARD_HEIGHT = PLAY_HEIGHT + HEAD_HEIGHT
 
 
 class MazeGame:

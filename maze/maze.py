@@ -1,9 +1,11 @@
-from typing import List
+from typing import List, Union
 
 from pygame import Rect
 from pygame.surface import Surface
 
 from maze.cats import Cats
+from maze.config import BACKGROUND_COLOR, PLAY_WIDTH, PLAY_HEIGHT, MAZE_HEIGHT, MAZE_WIDTH, TILE_WIDTH, TILE_HEIGHT, \
+    SURFACE_WIDTH, SURFACE_HEIGHT, WIDTH_CENTER, HEIGHT_CENTER, WINDOW_RIGHT_MAX, WINDOW_BOTTOM_MAX
 from maze.dog import Dog
 from maze.game_state import GameState
 from maze.mouse import Mouse
@@ -12,19 +14,8 @@ from maze.tiles import Tiles
 from maze.maze_generate import MazeGenerator, MazeMap, Point
 
 
-WINDOW_WIDTH = 320
-WINDOW_HEIGHT = 320
-WINDOW_WIDTH_CENTER = 160
-WINDOW_HEIGHT_CENTER = 160
-
-MAZE_WIDTH_PIXELS = 101 * 32
-MAZE_HEIGHT_PIXELS = 101 * 32
-MAZE_LEFT_MAX = MAZE_WIDTH_PIXELS - WINDOW_WIDTH
-MAZE_TOP_MAX = MAZE_HEIGHT_PIXELS - WINDOW_HEIGHT
-
-
 class Maze(object):
-    maze: Surface
+    surface: Surface
     background: Surface
     wall: Surface
     maze_generator: MazeGenerator
@@ -34,81 +25,55 @@ class Maze(object):
     maze_height: int
 
     tiles: Tiles
-    background_color = (156, 102, 47)
+    background_color = BACKGROUND_COLOR
 
-    mouse: Mouse
-    dog: Dog
-    cats: Cats
-    cheeses: ItemGroup
-    bones: ItemGroup
-    game_state: GameState
-
-    rect = Rect(0, 0, 320, 320)
+    rect = Rect(0, 0, PLAY_WIDTH, PLAY_HEIGHT)
     last_rect: Rect
 
-    def __init__(self, game_state: GameState, mouse: Mouse, cats: Cats, dog: Dog):
-        self.maze_width = 101
-        self.maze_height = 101
+    def __init__(self, tiles: Tiles):
+        self.maze_width = MAZE_WIDTH
+        self.maze_height = MAZE_HEIGHT
 
-        maze = Surface((self.maze_width * 32, self.maze_height * 32))
-        maze.fill(self.background_color)
+        self.surface = Surface((SURFACE_WIDTH, SURFACE_HEIGHT))
+        self.surface.fill(self.background_color)
 
-        self.tiles = Tiles()
+        self.tiles = tiles
         self.wall = self.tiles.wall
         self.background = self.tiles.ground
 
-        self.maze_generator = MazeGenerator(self.maze_width, self.maze_height)
-        self.mouse = mouse
-        self.cats = cats
-        self.dog = dog
-        self.game_state = game_state
-        self.cheeses = ItemGroup(self.game_state, "eat_cheese", 50, self.map, self.tiles.cheese)
-        self.bones = ItemGroup(self.game_state, "collect_bone", 10, self.map, self.tiles.bone)
-
-    def new_maze(self):
+    def new_maze(self, maze: MazeMap):
         # Generate new maze and render it into the maze surface
-        self.maze_generator._generate()
-        self.map = self.maze_generator.maze_image
+        self.map = maze
 
-        for row in range(0, self.maze_height):
-            for column in range(0, self.maze_width):
+        for row in range(0, MAZE_HEIGHT):
+            for column in range(0, MAZE_WIDTH):
                 rect = Rect(column * 32, row * 32, 32, 32)
-                if self.map.is_wall(column, row) == '#':
-                    self.maze.blit(self.wall, rect)
+                if self.map.is_wall(column, row):
+                    self.surface.blit(self.wall, rect)
                 else:
-                    self.maze.blit(self.background, rect)
-
-        # Put player in the upper left corner
-        exclude_list: List[Point] = [Point(1, 1)]
-        self.mouse.mouse_reset()
-
-        # Add the cheeses, bones, and cats
-        self.cheeses.new_game(exclude_list)
-        self.bones.new_game(exclude_list)
-        self.cats.reset(exclude_list)
+                    self.surface.blit(self.background, rect)
 
     def update(self) -> bool:
-        if self.mouse.sprite is None:
-            return False  # Out of lives - so game is over
-        if self.cheeses.is_empty:
-            self.new_maze()  # Level completed
+        pass
+        # if self.mouse.sprite is None:
+        #     return False  # Out of lives - so game is over
+        # if self.cheeses.is_empty:
+        #     return False  # Level completed
+        #
+        # self.cheeses.update()
+        # self.bones.update()
+        # self.dog.update()
+        # self.cats.update()
+        # self.mouse.update()
+        # return True
 
-        self.cheeses.update()
-        self.bones.update()
-        self.dog.update()
-        self.cats.update()
-        self.mouse.update()
-        return True
-
-    def draw(self, surface: Surface, dest_rect: Rect):
-        self.cheeses.draw(self.maze)
-        self.bones.draw(self.maze)
-        self.dog.draw(self.maze)
-        self.cats.draw(self.maze)
-        self.mouse.draw(self.maze)
-
-        dog_location = self.dog.get_location()
-        mouse_location = self.mouse.get_location()
+    def draw(self, surface: Surface, dest_rect: Rect,
+             dog_location: Union[Rect, None], mouse_location: Union[Rect, None]):
+        # self.cheeses.draw(self.surface)
+        # self.bones.draw(self.surface)
+        # self.dog.draw(self.surface)
+        # self.cats.draw(self.surface)
+        # self.mouse.draw(self.surface)
 
         critter_location = (dog_location if dog_location is not None else
                             (mouse_location if mouse_location is not None else self.last_rect))
@@ -117,16 +82,16 @@ class Maze(object):
         if critter_location == self.last_rect:
             rect = self.last_rect
         else:
-            x = critter_location.centerx - WINDOW_WIDTH_CENTER
+            x = critter_location.centerx - WIDTH_CENTER
             x = max(x, 0)
-            x = min(x, MAZE_LEFT_MAX)
+            x = min(x, WINDOW_RIGHT_MAX)
 
-            y = critter_location.centery - WINDOW_HEIGHT_CENTER
+            y = critter_location.centery - HEIGHT_CENTER
             y = max(y, 0)
-            y = min(y, MAZE_TOP_MAX)
+            y = min(y, WINDOW_BOTTOM_MAX)
 
             rect.left = x
             rect.top = y
             self.last_rect = rect
 
-        surface.blit(self.maze, dest_rect, rect)
+        surface.blit(self.surface, dest_rect, rect)
