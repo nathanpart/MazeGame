@@ -33,15 +33,15 @@ class MazeMap:
     map: List[List[str]]
 
     def __init__(self, width: int, height: int):
-        self.map = [['.' for _ in range(0, height + 1)] for _ in range(0, width + 1)]
+        self.map = [['.' for _ in range(0, height)] for _ in range(0, width)]
 
-        for x in range(0, width + 1):
-            if x == 0 or x == width:
-                for y in range(0, height + 1):
+        for x in range(0, width):
+            if x == 0 or x == (width - 1):
+                for y in range(0, height):
                     self.map[x][y] = '#'
                     continue
             self.map[x][0] = '#'
-            self.map[x][height] = '#'
+            self.map[x][height - 1] = '#'
         self.width = width
         self.height = height
 
@@ -106,13 +106,12 @@ class MazeGenerator:
         if width % 2 == 0 or height % 2 == 0:
             raise ValueError("The width and height parameters need to be odd.")
 
-        self.maze_image = MazeMap(width - 1, height - 1)
+        self.maze_image = MazeMap(width, height)
         self.width = (width - 1) // 2
         self.height = (height - 1) // 2
         self.total_cells = self.width * self.height
-        self.generate()
 
-    def render(self):
+    def _render(self):
         for row in range(0, self.height):
             for column in range(0, self.width):
                 walls = self.wall_map[column][row]
@@ -123,7 +122,7 @@ class MazeGenerator:
                 self.maze_image.map[(column * 2) + 1][(row * 2) + 2] = h_wall
                 self.maze_image.map[(column * 2) + 2][(row * 2) + 2] = '#'
 
-    def generate(self):
+    def _generate(self):
         wall_map = list()
         for column in range(0, self.width):
             wall_map.append(list())
@@ -139,24 +138,24 @@ class MazeGenerator:
         self.mapped_cells.add((self.column, self.row))
 
         while total < self.total_cells:
-            new_cell_dir = self.pick_cell()
+            new_cell_dir = self._pick_cell()
             if new_cell_dir == "left":
-                assert self.is_left_open()
+                assert self._is_left_open()
                 self.column -= 1
                 self.wall_map[self.column][self.row] = self.HORIZONTAL_WALL
             elif new_cell_dir == 'up':
-                assert self.is_above_open()
+                assert self._is_above_open()
                 self.row -= 1
                 self.wall_map[self.column][self.row] = self.VERTICAL_WALL
             elif new_cell_dir == 'right':
-                assert self.is_right_open()
+                assert self._is_right_open()
                 if self.wall_map[self.column][self.row] == self.BOTH_WALLS:
                     self.wall_map[self.column][self.row] = self.HORIZONTAL_WALL
                 else:
                     self.wall_map[self.column][self.row] = self.NO_WALLS
                 self.column += 1
             elif new_cell_dir == 'down':
-                assert self.is_below_open()
+                assert self._is_below_open()
                 if self.wall_map[self.column][self.row] == self.BOTH_WALLS:
                     self.wall_map[self.column][self.row] = self.VERTICAL_WALL
                 else:
@@ -164,7 +163,7 @@ class MazeGenerator:
                 self.row += 1
             else:
                 assert new_cell_dir == "advance"
-                assert not (self.is_below_open() or self.is_right_open() or self.is_above_open() or self.is_left_open())
+                assert not (self._is_below_open() or self._is_right_open() or self._is_above_open() or self._is_left_open())
                 do_once = True
                 while (self.column, self.row) not in self.mapped_cells or do_once:
                     do_once = False
@@ -178,65 +177,68 @@ class MazeGenerator:
             if new_cell_dir != "advance":
                 total += 1
                 self.mapped_cells.add((self.column, self.row))
-
-        self.render()
         return
 
-    def pick_cell(self):
-        if self.is_left_open():
-            if self.is_above_open():
-                if self.is_right_open():
+    def _pick_cell(self):
+        if self._is_left_open():
+            if self._is_above_open():
+                if self._is_right_open():
                     return ['left', 'up', 'right'][randint(0, 2)]
-                elif self.is_below_open():
+                elif self._is_below_open():
                     return ['left', 'up', 'down'][randint(0, 2)]
                 else:
                     return ['left', 'up'][randint(0, 1)]
             else:
-                if self.is_right_open():
-                    if self.is_below_open():
+                if self._is_right_open():
+                    if self._is_below_open():
                         return ['left', 'right', 'down'][randint(0, 2)]
                     else:
                         return ['left', 'right'][randint(0, 1)]
                 else:
-                    if self.is_below_open():
+                    if self._is_below_open():
                         return ['left', 'down'][randint(0, 1)]
                     else:
                         return 'left'
         else:
-            if self.is_above_open():
-                if self.is_right_open():
-                    if self.is_below_open():
+            if self._is_above_open():
+                if self._is_right_open():
+                    if self._is_below_open():
                         return ['up', 'right', 'down'][randint(0, 2)]
                     else:
                         return ['up', 'right'][randint(0, 1)]
                 else:
-                    if self.is_below_open():
+                    if self._is_below_open():
                         return ['up', 'down'][randint(0, 1)]
                     else:
                         return 'up'
             else:
-                if self.is_right_open():
-                    if self.is_below_open():
+                if self._is_right_open():
+                    if self._is_below_open():
                         return ['right', 'down'][randint(0, 1)]
                     else:
                         return 'right'
                 else:
-                    if self.is_below_open():
+                    if self._is_below_open():
                         return 'down'
                     else:
                         return 'advance'
 
-    def is_left_open(self):
+    def _is_left_open(self):
         return (self.column > 0) and (self.column - 1, self.row) not in self.mapped_cells
 
-    def is_above_open(self):
+    def _is_above_open(self):
         return (self.row > 0) and (self.column, self.row - 1) not in self.mapped_cells
 
-    def is_right_open(self):
+    def _is_right_open(self):
         return (self.column + 1 < self.width) and ((self.column + 1, self.row) not in self.mapped_cells)
 
-    def is_below_open(self):
+    def _is_below_open(self):
         return (self.row + 1 < self.height) and ((self.column, self.row + 1) not in self.mapped_cells)
+
+    def get_maze(self) -> MazeMap:
+        self._generate()
+        self._render()
+        return self.maze_image
 
     def __str__(self):
         s = ''

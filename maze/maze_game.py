@@ -13,6 +13,26 @@ from maze.maze_generate import MazeGenerator, NORTH
 from maze.mouse import Mouse
 from maze.tiles import Tiles
 
+# Size of the maze
+MAZE_WIDTH = 101
+MAZE_HEIGHT = 101
+
+# Size of a tile
+TILE_WIDTH = 32
+TILE_HEIGHT = 32
+
+# Size of the game play area
+PLAY_WIDTH = 10 * TILE_WIDTH
+PLAY_HEIGHT = 10 * TILE_HEIGHT
+
+# Size of the score/state area
+HEAD_WIDTH = 10 * TILE_WIDTH
+HEAD_HEIGHT = TILE_HEIGHT
+
+# Size of the game window
+BOARD_WIDTH = PLAY_WIDTH
+BOARD_HEIGHT = PLAY_HEIGHT + HEAD_HEIGHT
+
 
 class MazeGame:
     maze: Maze
@@ -26,7 +46,7 @@ class MazeGame:
     mouse_tile: Surface
     mouse_recs: Tuple[Rect]
 
-    size = 320, 352
+    size = BOARD_WIDTH, BOARD_HEIGHT
     background = Color(156, 102, 47)
     screen: Surface
     clock: Clock

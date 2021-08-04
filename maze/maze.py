@@ -67,7 +67,7 @@ class Maze(object):
 
     def new_maze(self):
         # Generate new maze and render it into the maze surface
-        self.maze_generator.generate()
+        self.maze_generator._generate()
         self.map = self.maze_generator.maze_image
 
         for row in range(0, self.maze_height):

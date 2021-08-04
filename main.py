@@ -3,18 +3,18 @@ from typing import List
 
 import pygame
 
-from maze.maze_generate import MazeGenerator
+from maze.maze_generate import MazeGenerator, MazeMap
 
 
 class MazeGame:
-    location_map: List[List[str]]
     cur_move: List[int]
     player_scrolling: bool
     column: int
     row: int
 
     tiles: List
-    maze: MazeGenerator
+    maze_generator: MazeGenerator
+    maze: MazeMap
 
     moves = [[0, 0], [-2, 0], [0, -2], [2, 0], [0, 2]]
     black = 0, 0, 0
@@ -25,9 +25,9 @@ class MazeGame:
     def __init__(self):
         pygame.init()
 
-        self.maze = MazeGenerator(49, 49)
-        self.width = len(self.maze.maze_image.map[0]) * 10
-        self.height = len(self.maze.maze_image.map) * 10
+        self.maze_generator = MazeGenerator(49, 49)
+        self.width = len(self.maze_generator.maze_image.map[0]) * 10
+        self.height = len(self.maze_generator.maze_image.map) * 10
 
         self.size = self.width, self.height
         self.screen = pygame.display.set_mode(self.size)
@@ -47,12 +47,12 @@ class MazeGame:
 
     def new_maze(self):
 
-        self.maze.generate()
+        self.maze = self.maze_generator.get_maze()
 
         self.tiles = list()
-        for row in range(0, len(self.maze.maze_image.map[0])):
-            for col in range(0, len(self.maze.maze_image.map)):
-                if self.maze.maze_image.is_wall(col, row):
+        for row in range(0, self.maze.height):
+            for col in range(0, self.maze.width):
+                if self.maze.is_wall(col, row):
                     self.tiles.append((self.wall, pygame.Rect(col * 10, row * 10, 10, 10)))
 
         self.tiles.append((self.maze_exit, self.exit_rect))
@@ -67,7 +67,7 @@ class MazeGame:
     def main_loop(self):
         self.new_maze()
         print()
-        print(self.maze)
+        print(self.maze_generator)
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -75,22 +75,22 @@ class MazeGame:
             if not self.player_scrolling:
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_UP]:
-                    if not self.maze.maze_image.is_wall(self.column, self.row - 1):
+                    if not self.maze.is_wall(self.column, self.row - 1):
                         self.cur_move = self.moves[2]
                         self.player_scrolling = True
                         self.row -= 1
                 elif keys[pygame.K_LEFT]:
-                    if not self.maze.maze_image.is_wall(self.column - 1, self.row):
+                    if not self.maze.is_wall(self.column - 1, self.row):
                         self.cur_move = self.moves[1]
                         self.player_scrolling = True
                         self.column -= 1
                 elif keys[pygame.K_RIGHT]:
-                    if not self.maze.maze_image.is_wall(self.column + 1, self.row):
+                    if not self.maze.is_wall(self.column + 1, self.row):
                         self.cur_move = self.moves[3]
                         self.player_scrolling = True
                         self.column += 1
                 elif keys[pygame.K_DOWN]:
-                    if not self.maze.maze_image.is_wall(self.column, self.row + 1):
+                    if not self.maze.is_wall(self.column, self.row + 1):
                         self.cur_move = self.moves[4]
                         self.player_scrolling = True
                         self.row += 1
