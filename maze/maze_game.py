@@ -8,8 +8,9 @@ from pygame.time import Clock
 
 from maze.config import BOARD_WIDTH, BOARD_HEIGHT, MAZE_WIDTH, MAZE_HEIGHT, BACKGROUND_COLOR, HEAD_WIDTH, HEAD_HEIGHT
 from maze.game_state import GameState
+from maze.items import ItemGroup
 from maze.maze import Maze
-from maze.maze_generate import MazeGenerator, MazeMap
+from maze.maze_generate import MazeGenerator, MazeMap, Point
 from maze.mouse import Mouse
 from maze.tiles import Tiles
 
@@ -18,6 +19,8 @@ class MazeGame:
     play_game: bool
     maze: Maze
     mouse: Optional[Mouse]
+    cheese: Optional[ItemGroup]
+    bones: Optional[ItemGroup]
 
     game_state: GameState
     tiles: Tiles
@@ -30,6 +33,8 @@ class MazeGame:
     background = Color(156, 102, 47)
     screen: Surface
     clock: Clock
+
+    level: int
 
     def __init__(self):
         pygame.init()
@@ -46,6 +51,10 @@ class MazeGame:
         self.game_state = GameState(self.tiles)
 
         self.mouse = None
+        self.cheese = None
+        self.bones = None
+
+        self.level = 0
 
     def title_screen(self):
         pass
@@ -54,7 +63,14 @@ class MazeGame:
         self.map = self.generator.get_maze()
         self.maze.new_maze(self.map)
 
-        # To Do level cheeses, bones, and cats
+        if self.cheese is None:
+            self.cheese = ItemGroup(self.game_state, self.map, self.tiles.cheese, 1, 0)
+        if self.bones is None:
+            self.bones = ItemGroup(self.game_state, self.map, self.tiles.bone, 5, 1)
+
+        exclude_list = [Point(1, 1)]
+        self.cheese.new_game(exclude_list, 50)
+        self.bones.new_game(exclude_list, 10)
 
     def game_loop(self):
         self.new_level()
@@ -88,8 +104,15 @@ class MazeGame:
                 else:
                     self.play_game = False      # Game Over
 
+            self.cheese.update(self.mouse.sprite)
+            self.bones.update(self.mouse.sprite)
+
             self.screen.fill(BACKGROUND_COLOR)
+
             self.mouse.draw(self.maze.surface)
+            self.cheese.draw(self.maze.surface)
+            self.bones.draw(self.maze.surface)
+
             self.maze.draw(self.screen, Rect(0, 32, 32, 32), None, self.mouse.get_location())
             self.game_state.draw(self.screen, Rect(0, 0, HEAD_WIDTH, HEAD_HEIGHT))
 
@@ -98,4 +121,5 @@ class MazeGame:
             self.clock.tick(40)
 
     def next_mouse(self):
-        return self.game_state.next_life()
+        self.game_state.lives -= 1
+        return self.game_state.lives > 0

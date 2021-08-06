@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 from pygame import Rect
 from pygame.surface import Surface
@@ -6,6 +6,8 @@ from pygame.surface import Surface
 from maze.config import BACKGROUND_COLOR, PLAY_WIDTH, PLAY_HEIGHT, MAZE_HEIGHT, MAZE_WIDTH, SURFACE_WIDTH, \
     SURFACE_HEIGHT, RIGHT_SCROLL_LIM, \
     LEFT_SCROLL_LIM, MID_PLAY_WIDTH, BOT_SCROLL_LIM, TOP_SCROLL_LIM, MID_PLAY_HEIGHT
+from maze.game_state import GameState
+from maze.items import ItemGroup
 from maze.maze_generate import MazeGenerator, MazeMap
 from maze.tiles import Tiles
 
@@ -26,6 +28,9 @@ class Maze(object):
     rect = Rect(0, 0, PLAY_WIDTH, PLAY_HEIGHT)
     last_rect: Rect
 
+    level: int
+    # cheese: Optional[ItemGroup]
+
     def __init__(self, tiles: Tiles):
         self.maze_width = MAZE_WIDTH
         self.maze_height = MAZE_HEIGHT
@@ -37,6 +42,7 @@ class Maze(object):
         self.wall = self.tiles.wall
         self.background = self.tiles.ground
         self.last_rect = Rect(0, 0, 0, 0)
+        # self.cheese = None
 
     def new_maze(self, maze: MazeMap):
         # Generate new maze and render it into the maze surface
@@ -49,6 +55,10 @@ class Maze(object):
                     self.surface.blit(self.wall, rect)
                 else:
                     self.surface.blit(self.background, rect)
+        # if self.cheese is None:
+        #     self.cheese = ItemGroup(game_state, maze, self.tiles.cheese)
+        # else:
+        #     self.cheese.empty()
 
     def update(self) -> bool:
         pass

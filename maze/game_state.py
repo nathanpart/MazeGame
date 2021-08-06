@@ -46,28 +46,6 @@ class GameState(object):
         self.lives.value = 3
         self.bones.value = 0
 
-    def eat_cheese(self):
-        self.score += 1
-
-    def collect_bone(self):
-        self.bones += 1
-        self.score += 5
-
-    def cat_got_ate(self):
-        self.score += 10
-
-    def deployed_dog(self) -> bool:
-        if self.bones == 0:
-            return False
-        self.bones -= 1
-        return True
-
-    def next_life(self) -> bool:
-        if self.lives == 0:
-            return False
-        self.lives -= 1
-        return True
-
     def draw(self, surface: Surface, dest_rect: Rect):
         self.display.fill(BACKGROUND_COLOR)
         self.score.draw(self.display, self.score_rect)
