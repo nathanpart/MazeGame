@@ -6,10 +6,10 @@ from pygame import Rect, Color
 from pygame.surface import Surface
 from pygame.time import Clock
 
-from maze.config import BOARD_WIDTH, BOARD_HEIGHT, MAZE_WIDTH, MAZE_HEIGHT, BACKGROUND_COLOR
+from maze.config import BOARD_WIDTH, BOARD_HEIGHT, MAZE_WIDTH, MAZE_HEIGHT, BACKGROUND_COLOR, HEAD_WIDTH, HEAD_HEIGHT
 from maze.game_state import GameState
 from maze.maze import Maze
-from maze.maze_generate import MazeGenerator, NORTH, MazeMap
+from maze.maze_generate import MazeGenerator, MazeMap
 from maze.mouse import Mouse
 from maze.tiles import Tiles
 
@@ -37,14 +37,13 @@ class MazeGame:
         self.screen.fill(BACKGROUND_COLOR)
         self.clock = Clock()
 
-        background = self.background
         self.tiles = Tiles()
 
         self.generator = MazeGenerator(MAZE_WIDTH, MAZE_HEIGHT)
         self.maze = Maze(self.tiles)
 
         self.mouse_tile, *self.mouse_recs = self.tiles.mice
-        self.game_state = GameState(background, self.mouse_tile.subsurface(self.mouse_recs[NORTH]), self.tiles.bone)
+        self.game_state = GameState(self.tiles)
 
         self.mouse = None
 
@@ -89,12 +88,10 @@ class MazeGame:
                 else:
                     self.play_game = False      # Game Over
 
-            self.game_state.update()
-
             self.screen.fill(BACKGROUND_COLOR)
             self.mouse.draw(self.maze.surface)
             self.maze.draw(self.screen, Rect(0, 32, 32, 32), None, self.mouse.get_location())
-            self.game_state.draw(self.screen)
+            self.game_state.draw(self.screen, Rect(0, 0, HEAD_WIDTH, HEAD_HEIGHT))
 
             pygame.display.flip()
 

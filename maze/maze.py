@@ -1,18 +1,13 @@
-from typing import List, Union
+from typing import Union
 
 from pygame import Rect
 from pygame.surface import Surface
 
-from maze.cats import Cats
-from maze.config import BACKGROUND_COLOR, PLAY_WIDTH, PLAY_HEIGHT, MAZE_HEIGHT, MAZE_WIDTH, TILE_WIDTH, TILE_HEIGHT, \
-    SURFACE_WIDTH, SURFACE_HEIGHT, WIDTH_CENTER, HEIGHT_CENTER, WINDOW_RIGHT_MAX, WINDOW_BOTTOM_MAX, RIGHT_SCROLL_LIM, \
+from maze.config import BACKGROUND_COLOR, PLAY_WIDTH, PLAY_HEIGHT, MAZE_HEIGHT, MAZE_WIDTH, SURFACE_WIDTH, \
+    SURFACE_HEIGHT, RIGHT_SCROLL_LIM, \
     LEFT_SCROLL_LIM, MID_PLAY_WIDTH, BOT_SCROLL_LIM, TOP_SCROLL_LIM, MID_PLAY_HEIGHT
-from maze.dog import Dog
-from maze.game_state import GameState
-from maze.mouse import Mouse
-from maze.items import ItemGroup
+from maze.maze_generate import MazeGenerator, MazeMap
 from maze.tiles import Tiles
-from maze.maze_generate import MazeGenerator, MazeMap, Point
 
 
 class Maze(object):
