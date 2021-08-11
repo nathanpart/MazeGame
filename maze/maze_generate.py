@@ -10,14 +10,30 @@ SOUTH = 3
 
 @total_ordering
 class Point:
+    """
+    Data structure for storing location in the maze
+    """
     col: int
     row: int
 
     def __init__(self, col: int, row: int):
+        """
+        Create a point instance at
+
+        :param col: The location's column coordinate
+        :param row: The location's row coordinate
+        """
         self.col = col
         self.row = row
 
     def here(self, col: int, row: int) -> bool:
+        """
+        Returns true this point is at the position specified in the parameters
+
+        :param col: column of the location to check
+        :param row: row of the location to check
+        :return: True if the value in the point is at the location (col, row), else False
+        """
         return self.col == col and self.row == row
 
     def __eq__(self, other):
@@ -28,11 +44,21 @@ class Point:
 
 
 class MazeMap:
+    """
+    Hold the map information of a generated maze. Stored as a python's equivalent of a 2-dimensional array
+    (List of Lists) as a list of Column data.  This gives the ability to for the normal x,y index order
+    """
     width: int
     height: int
     map: List[List[str]]
 
     def __init__(self, width: int, height: int):
+        """
+        Initialize the maze map structure
+
+        :param width: width of the maze
+        :param height: hegith of the maze
+        """
         self.map = [['.' for _ in range(0, height)] for _ in range(0, width)]
 
         for x in range(0, width):
@@ -46,9 +72,23 @@ class MazeMap:
         self.height = height
 
     def is_wall(self, col: int, row: int) -> bool:
+        """
+        Determine is the location is a wall or passage way
+        :param col: column of the maze location
+        :param row: row of the maze location
+        :return: True if the location is a wall, or False if the location is a passage way
+        """
         return self.map[col][row] == '#'
 
     def passages(self, col: int, row: int, cur_dir: Optional[int] = None) -> List[int]:
+        """
+        Returns  a list of passages available to move from current location
+
+        :param col: Column of the current location
+        :param row: Row of the current location
+        :param cur_dir: Direction of current direction of travel or None
+        :return: List of directions of available passages
+        """
         pass_list = list()
         if col - 1 != 0 and not self.is_wall(col - 1, row):
             if cur_dir is None or cur_dir != EAST:
@@ -70,6 +110,11 @@ class MazeMap:
         return pass_list
 
     def get_rand_cell(self) -> Point:
+        """
+        Get a random location in the maze that is not a wall
+
+        :return: Point containing the random location
+        """
         point = Point(0, 0)
         while self.map[point.col][point.row] == '#':
             point.col = randrange(1, self.width)
@@ -98,22 +143,47 @@ class MazeGenerator:
 
     column = 0
     row = 0
-    width = 0
-    height = 0
+    _width = 0
+    _height = 0
     total_cells = 0
 
+    @property
+    def width(self):
+        return (self._width * 2) + 1
+
+    @width.setter
+    def width(self, w):
+        self._width = (w - 1) // 2
+
+    @property
+    def height(self):
+        return (self._height * 2) + 1
+
+    @height.setter
+    def height(self, h):
+        self._height = (h - 1) // 2
+
     def __init__(self, width=79, height=13):
+        """
+        Initialize a new maze generator
+
+        :param width: Width of the mazes to be generated
+        :param height: Height of the mazes to be generated
+        """
         if width % 2 == 0 or height % 2 == 0:
             raise ValueError("The width and height parameters need to be odd.")
 
         self.maze_image = MazeMap(width, height)
-        self.width = (width - 1) // 2
-        self.height = (height - 1) // 2
-        self.total_cells = self.width * self.height
+        self.width = width
+        self.height = height
+        self.total_cells = self._width * self._height
 
     def _render(self):
-        for row in range(0, self.height):
-            for column in range(0, self.width):
+        """
+        Render the maze that generated into a MazeMap
+        """
+        for row in range(0, self._height):
+            for column in range(0, self._width):
                 walls = self.wall_map[column][row]
                 v_wall = '#' if walls == self.BOTH_WALLS or walls == self.VERTICAL_WALL else ' '
                 h_wall = '#' if walls == self.BOTH_WALLS or walls == self.HORIZONTAL_WALL else ' '
@@ -123,16 +193,19 @@ class MazeGenerator:
                 self.maze_image.map[(column * 2) + 2][(row * 2) + 2] = '#'
 
     def _generate(self):
+        """
+        Generate the maze by determining walls and passages
+        """
         wall_map = list()
-        for column in range(0, self.width):
+        for column in range(0, self._width):
             wall_map.append(list())
-            for row in range(0, self.height):
+            for row in range(0, self._height):
                 wall_map[column].append(self.BOTH_WALLS)
         self.wall_map = wall_map
 
         self.mapped_cells = set()
 
-        self.column = randint(1, self.width - 1)
+        self.column = randint(1, self._width - 1)
         self.row = 0
         total = 1
         self.mapped_cells.add((self.column, self.row))
@@ -163,15 +236,16 @@ class MazeGenerator:
                 self.row += 1
             else:
                 assert new_cell_dir == "advance"
-                assert not (self._is_below_open() or self._is_right_open() or self._is_above_open() or self._is_left_open())
+                assert not (self._is_below_open() or self._is_right_open() or
+                            (self._is_above_open() or self._is_left_open()))
                 do_once = True
                 while (self.column, self.row) not in self.mapped_cells or do_once:
                     do_once = False
                     self.column += 1
-                    if self.column == self.width:
+                    if self.column == self._width:
                         self.column = 0
                         self.row += 1
-                        if self.row == self.height:
+                        if self.row == self._height:
                             self.row = 0
 
             if new_cell_dir != "advance":
@@ -180,6 +254,9 @@ class MazeGenerator:
         return
 
     def _pick_cell(self):
+        """
+        Pick a available surrounding cell and move to it marking the passage to it as a passage
+        """
         if self._is_left_open():
             if self._is_above_open():
                 if self._is_right_open():
@@ -224,23 +301,51 @@ class MazeGenerator:
                         return 'advance'
 
     def _is_left_open(self):
+        """
+        Is the cell to the left available to be added to the maze?
+
+        :return: True is available, or False
+        """
         return (self.column > 0) and (self.column - 1, self.row) not in self.mapped_cells
 
     def _is_above_open(self):
+        """
+        Is the cell above available to be added to the maze?
+
+        :return: True is available, or False
+        """
         return (self.row > 0) and (self.column, self.row - 1) not in self.mapped_cells
 
     def _is_right_open(self):
-        return (self.column + 1 < self.width) and ((self.column + 1, self.row) not in self.mapped_cells)
+        """
+        Is the cell to the right available to be added to the maze?
+
+        :return: True is available, or False
+        """
+        return (self.column + 1 < self._width) and ((self.column + 1, self.row) not in self.mapped_cells)
 
     def _is_below_open(self):
-        return (self.row + 1 < self.height) and ((self.column, self.row + 1) not in self.mapped_cells)
+        """
+        Is the cell below available to be added to the maze?
+
+        :return: True is available, or False
+        """
+        return (self.row + 1 < self._height) and ((self.column, self.row + 1) not in self.mapped_cells)
 
     def get_maze(self) -> MazeMap:
+        """
+        Get a new random generated maze
+
+        :return: MazeMap of the generated maze
+        """
         self._generate()
         self._render()
         return self.maze_image
 
     def __str__(self):
+        """
+        Dump the maze into a string
+        """
         s = ''
 
         for row in range(0, len(self.maze_image.map[0])):

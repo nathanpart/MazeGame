@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Union
 
 from pygame import Rect
 from pygame.surface import Surface
@@ -6,8 +6,6 @@ from pygame.surface import Surface
 from maze.config import BACKGROUND_COLOR, PLAY_WIDTH, PLAY_HEIGHT, MAZE_HEIGHT, MAZE_WIDTH, SURFACE_WIDTH, \
     SURFACE_HEIGHT, RIGHT_SCROLL_LIM, \
     LEFT_SCROLL_LIM, MID_PLAY_WIDTH, BOT_SCROLL_LIM, TOP_SCROLL_LIM, MID_PLAY_HEIGHT
-from maze.game_state import GameState
-from maze.items import ItemGroup
 from maze.maze_generate import MazeGenerator, MazeMap
 from maze.tiles import Tiles
 
@@ -28,9 +26,6 @@ class Maze(object):
     rect = Rect(0, 0, PLAY_WIDTH, PLAY_HEIGHT)
     last_rect: Rect
 
-    level: int
-    # cheese: Optional[ItemGroup]
-
     def __init__(self, tiles: Tiles):
         self.maze_width = MAZE_WIDTH
         self.maze_height = MAZE_HEIGHT
@@ -45,7 +40,6 @@ class Maze(object):
         # self.cheese = None
 
     def new_maze(self, maze: MazeMap):
-        # Generate new maze and render it into the maze surface
         self.map = maze
 
         for row in range(0, MAZE_HEIGHT):
@@ -55,17 +49,22 @@ class Maze(object):
                     self.surface.blit(self.wall, rect)
                 else:
                     self.surface.blit(self.background, rect)
-        # if self.cheese is None:
-        #     self.cheese = ItemGroup(game_state, maze, self.tiles.cheese)
-        # else:
-        #     self.cheese.empty()
 
     def update(self) -> bool:
         pass
 
     def draw(self, surface: Surface, dest_rect: Rect,
              dog_location: Union[Rect, None], mouse_location: Union[Rect, None]):
+        """
+        Using the mouse of dog's location determine where the scrolling position of the maze
+        is, and then render the viewable section of the maze into the main window
 
+        :param surface: Main window's surface
+        :param dest_rect: The rectangle of where in the window's that the viewable maze section is rendered into
+        :param dog_location: Rectangle of current dog position
+        :param mouse_location: Rectangle of the current mouse position
+        :return: None
+        """
         critter_location = (dog_location if dog_location is not None else
                             (mouse_location if mouse_location is not None else self.last_rect))
 
