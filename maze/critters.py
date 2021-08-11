@@ -8,6 +8,10 @@ from maze.sprites import MazeSprite
 
 
 class Critter(MazeSprite):
+    """
+    A sub class of MazeSprite add functionality that is common to the dog and cat
+    """
+
     tiles: Surface
     dir_rects: Tuple[Rect, Rect, Rect, Rect]
     _direction: int
@@ -16,6 +20,13 @@ class Critter(MazeSprite):
     speeds = [(-1, 0), (0, -1), (1, 0), (0, 1)]
 
     def __init__(self, maze_map: MazeMap, critter_tiles: Tuple[Surface, Rect, Rect, Rect, Rect], *groups):
+        """
+        Initialize the critter specific fields
+
+        :param maze_map: the MazeMap of the maze the critter lives in
+        :param critter_tiles: The critter's tile tuple
+        :param groups:  Any groups the critter sprite is associated with
+        """
         super().__init__(maze_map, *groups)
 
         self.tiles, *self.dir_rects = critter_tiles
@@ -25,6 +36,9 @@ class Critter(MazeSprite):
 
     @property
     def direction(self):
+        """
+        Property of the critters current direction
+        """
         return self._direction
 
     @direction.setter
@@ -38,22 +52,37 @@ class Critter(MazeSprite):
         return self.column, self.row
 
     def move_west(self):
+        """
+        Start the sprite moving to the location to the west
+        """
         self.in_transit = True
         self.direction = WEST
 
     def move_north(self):
+        """
+        Start the sprite moving to the location to the north
+        """
         self.in_transit = True
         self.direction = NORTH
 
     def move_east(self):
+        """
+        Start the sprite moving to the location to the east
+        """
         self.in_transit = True
         self.direction = EAST
 
     def move_south(self):
+        """
+        Start the sprite moving to the location to the south
+        """
         self.in_transit = True
         self.direction = SOUTH
 
     def update(self):
+        """
+        Update the critter's sprite location for the next frame
+        """
         if self.in_transit:
             mask = self.speeds[self._direction]
             self.rect = self.rect.move(mask[0] * self.speed, mask[1] * self.speed)
