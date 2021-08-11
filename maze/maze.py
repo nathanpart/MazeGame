@@ -53,34 +53,28 @@ class Maze(object):
     def update(self) -> bool:
         pass
 
-    def draw(self, surface: Surface, dest_rect: Rect,
-             dog_location: Union[Rect, None], mouse_location: Union[Rect, None]):
+    def draw(self, surface: Surface, dest_rect: Rect, critter_location: Union[Rect, None]):
         """
-        Using the mouse of dog's location determine where the scrolling position of the maze
-        is, and then render the viewable section of the maze into the main window
+        Render a window into the maze into the main surface while making sure the critter at critter_location is visible
 
         :param surface: Main window's surface
         :param dest_rect: The rectangle of where in the window's that the viewable maze section is rendered into
-        :param dog_location: Rectangle of current dog position
-        :param mouse_location: Rectangle of the current mouse position
-        :return: None
+        :param critter_location: Rectangle of critter to scroll maze around
         """
-        critter_location = (dog_location if dog_location is not None else
-                            (mouse_location if mouse_location is not None else self.last_rect))
-
         rect = self.rect.copy()
-        if RIGHT_SCROLL_LIM > critter_location.left > LEFT_SCROLL_LIM:
-            rect.left = critter_location.left - LEFT_SCROLL_LIM
-        elif critter_location.left < MID_PLAY_WIDTH:
-            rect.left = 0
-        else:
-            rect.left = RIGHT_SCROLL_LIM - MID_PLAY_WIDTH
+        if critter_location is not None:
+            if RIGHT_SCROLL_LIM > critter_location.left > LEFT_SCROLL_LIM:
+                rect.left = critter_location.left - LEFT_SCROLL_LIM
+            elif critter_location.left < MID_PLAY_WIDTH:
+                rect.left = 0
+            else:
+                rect.left = RIGHT_SCROLL_LIM - MID_PLAY_WIDTH
 
-        if BOT_SCROLL_LIM > critter_location.top > TOP_SCROLL_LIM:
-            rect.top = critter_location.top - TOP_SCROLL_LIM
-        elif critter_location.top < MID_PLAY_HEIGHT:
-            rect.top = 0
-        else:
-            rect.top = BOT_SCROLL_LIM - MID_PLAY_HEIGHT
+            if BOT_SCROLL_LIM > critter_location.top > TOP_SCROLL_LIM:
+                rect.top = critter_location.top - TOP_SCROLL_LIM
+            elif critter_location.top < MID_PLAY_HEIGHT:
+                rect.top = 0
+            else:
+                rect.top = BOT_SCROLL_LIM - MID_PLAY_HEIGHT
 
         surface.blit(self.surface, dest_rect, rect)

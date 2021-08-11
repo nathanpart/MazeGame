@@ -109,6 +109,41 @@ class MazeMap:
 
         return pass_list
 
+    def right_hand_rule(self, location: Point, current_direction: int) -> int:
+        avail_dirs = self.passages(location.col, location.row)
+        if current_direction == EAST:
+            if SOUTH in avail_dirs:
+                return SOUTH
+            if EAST in avail_dirs:
+                return EAST
+            if NORTH in avail_dirs:
+                return NORTH
+            return WEST
+        elif current_direction == SOUTH:
+            if WEST in avail_dirs:
+                return WEST
+            if SOUTH in avail_dirs:
+                return SOUTH
+            if EAST in avail_dirs:
+                return EAST
+            return NORTH
+        elif current_direction == WEST:
+            if NORTH in avail_dirs:
+                return NORTH
+            if WEST in avail_dirs:
+                return WEST
+            if SOUTH in avail_dirs:
+                return SOUTH
+            return EAST
+        else:
+            if EAST in avail_dirs:
+                return EAST
+            if NORTH in avail_dirs:
+                return NORTH
+            if WEST in avail_dirs:
+                return WEST
+            return SOUTH
+
     def get_rand_cell(self) -> Point:
         """
         Get a random location in the maze that is not a wall

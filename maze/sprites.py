@@ -6,6 +6,9 @@ from maze.maze_generate import MazeMap
 
 
 class MazeSprite(pygame.sprite.Sprite):
+    """
+    pyGame Sprite subclass that is designed to represent a sprite that is positioned inside the maze
+    """
     _column: int
     _row: int
     map: MazeMap
@@ -18,11 +21,18 @@ class MazeSprite(pygame.sprite.Sprite):
         self.map = maze_map
 
     def _compute_location(self):
+        """
+        Update our rect top and left coordinates to reflect current location in maze.  This is internal function is
+        called from the row and column setters.
+        """
         self.rect.top = self._row * 32
         self.rect.left = self._column * 32
 
     @property
     def column(self):
+        """
+        Property holding the column where the sprite is positioned in the maze
+        """
         return self._column
 
     @column.setter
@@ -32,6 +42,9 @@ class MazeSprite(pygame.sprite.Sprite):
 
     @property
     def row(self):
+        """
+        Property holding the row of where the sprite is positioned in the maze
+        """
         return self._row
 
     @row.setter

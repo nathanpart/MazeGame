@@ -6,6 +6,7 @@ from pygame import Rect, Color
 from pygame.surface import Surface
 from pygame.time import Clock
 
+from maze.cats import Cats
 from maze.config import BOARD_WIDTH, BOARD_HEIGHT, MAZE_WIDTH, MAZE_HEIGHT, BACKGROUND_COLOR, HEAD_WIDTH, HEAD_HEIGHT
 from maze.game_state import GameState
 from maze.items import ItemGroup
@@ -19,6 +20,7 @@ class MazeGame:
     play_game: bool
     maze: Maze
     mouse: Optional[Mouse]
+    cats: Optional[Cats]
     cheese: Optional[ItemGroup]
     bones: Optional[ItemGroup]
 
@@ -51,6 +53,7 @@ class MazeGame:
         self.game_state = GameState(self.tiles)
 
         self.mouse = None
+        self.cats = None
         self.cheese = None
         self.bones = None
 
@@ -63,23 +66,26 @@ class MazeGame:
         self.map = self.generator.get_maze()
         self.maze.new_maze(self.map)
 
-        if self.cheese is None:
-            self.cheese = ItemGroup(self.game_state, self.map, self.tiles.cheese, 1, 0)
-        if self.bones is None:
-            self.bones = ItemGroup(self.game_state, self.map, self.tiles.bone, 5, 1)
-
-        exclude_list = [Point(1, 1)]
-        self.cheese.new_game(exclude_list, 50)
-        self.bones.new_game(exclude_list, 10)
-
-    def game_loop(self):
-        self.new_level()
-        self.game_state.new_game()
-
         if self.mouse is None:
             self.mouse = Mouse(self.tiles, self.map)
         else:
             self.mouse.mouse_reset(self.map)
+
+        if self.cheese is None:
+            self.cheese = ItemGroup(self.game_state, self.map, self.tiles.cheese, 1, 0)
+        if self.bones is None:
+            self.bones = ItemGroup(self.game_state, self.map, self.tiles.bone, 5, 1)
+        if self.cats is None:
+            self.cats = Cats(self.tiles, self.map, self.mouse)
+
+        exclude_list = [Point(1, 1)]
+        self.cheese.new_game(exclude_list, 50)
+        self.bones.new_game(exclude_list, 10)
+        self.cats.reset(exclude_list, 1)
+
+    def game_loop(self):
+        self.new_level()
+        self.game_state.new_game()
 
         self.play_game = True
         while self.play_game:
@@ -106,14 +112,16 @@ class MazeGame:
 
             self.cheese.update(self.mouse.sprite)
             self.bones.update(self.mouse.sprite)
+            self.cats.update()
 
             self.screen.fill(BACKGROUND_COLOR)
 
             self.mouse.draw(self.maze.surface)
             self.cheese.draw(self.maze.surface)
             self.bones.draw(self.maze.surface)
+            self.cats.draw(self.maze.surface)
 
-            self.maze.draw(self.screen, Rect(0, 32, 32, 32), None, self.mouse.get_location())
+            self.maze.draw(self.screen, Rect(0, 32, 32, 32), self.cats.sprites()[0].rect)
             self.game_state.draw(self.screen, Rect(0, 0, HEAD_WIDTH, HEAD_HEIGHT))
 
             pygame.display.flip()

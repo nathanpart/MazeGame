@@ -23,6 +23,8 @@ class Cat(Critter):
     def __init__(self, mouse: Mouse, maze_map: MazeMap,
                  critter_tiles: Tuple[Surface, Rect, Rect, Rect, Rect], *sprites):
         self.mouse_group = mouse
+        self.is_chased = False
+        self.activity = 0
         super().__init__(maze_map, critter_tiles, *sprites)
 
     def update(self):
@@ -39,12 +41,14 @@ class Cat(Critter):
                     self.in_transit = True
             else:
                 if self.activity == 0:
-                    self.activity = randint(1, 10)
+                    self.activity = randint(5, 100)
                     self.speed = randint(0, 2)
+                    if self.speed != 0:
+                        self.direction = choice(self.map.passages(self.column, self.row))
                 else:
                     self.activity -= 1
                 if self.speed != 0:
-                    self.direction = choice(self.map.passages(self.column, self.row))
+                    self.direction = self.map.right_hand_rule(Point(self.column, self.row), self.direction)
                     self.in_transit = True
         if self.column == mouse.column and self.row == mouse.row:
             eat_mouse(mouse)
@@ -75,28 +79,26 @@ class Cat(Critter):
 
 
 class Cats(Group):
-    count: int
     cats: Tuple[Surface, Rect, Rect, Rect, Rect]
     cell_width: int
     cell_height: int
     map: MazeMap
     mouse: Mouse
 
-    def __init__(self, tiles: Tiles, maze_map: MazeMap, count: int, mouse: Mouse, *sprites):
+    def __init__(self, tiles: Tiles, maze_map: MazeMap, mouse: Mouse, *sprites):
         super(Cats, self).__init__()
         self.add(*sprites)
-        self.count = count
         self.cats = tiles.cats
         self.map = maze_map
         self.mouse = mouse
 
-    def reset(self, exclude_list: List[Point]):
+    def reset(self, exclude_list: List[Point], count: int):
         self.empty()
-        for _ in range(0, self.count):
+        for _ in range(0, count):
             cat = Cat(self.mouse, self.map, self.cats)
             self.add(cat)
             new_point = self.map.get_rand_cell()
-            while new_point in exclude_list or new_point < Point(20, 30):
+            while new_point in exclude_list or new_point < Point(10, 10):
                 new_point = self.map.get_rand_cell()
             cat.column = new_point.col
             cat.row = new_point.row
