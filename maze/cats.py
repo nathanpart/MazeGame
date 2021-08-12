@@ -50,9 +50,13 @@ class Cat(Critter):
                 if self.speed != 0:
                     self.direction = self.map.right_hand_rule(Point(self.column, self.row), self.direction)
                     self.in_transit = True
-        if self.column == mouse.column and self.row == mouse.row:
-            eat_mouse(mouse)
+                if self.column == mouse.column and self.row == mouse.row:
+                    self.eat_mouse()
         super().update()
+
+    def eat_mouse(self):
+        mouse = self.mouse_group.sprite
+        mouse.kill()
 
     def chased(self, dog_col: int, dog_row: int):
         self.is_chased = True
@@ -84,6 +88,8 @@ class Cats(Group):
     cell_height: int
     map: MazeMap
     mouse: Mouse
+    background: Surface
+    restore_rects: List[Rect]
 
     def __init__(self, tiles: Tiles, maze_map: MazeMap, mouse: Mouse, *sprites):
         super(Cats, self).__init__()
@@ -91,9 +97,12 @@ class Cats(Group):
         self.cats = tiles.cats
         self.map = maze_map
         self.mouse = mouse
+        self.background = tiles.ground
+        self.restore_rects = list()
 
     def reset(self, exclude_list: List[Point], count: int):
         self.empty()
+        self.restore_rects.clear()
         for _ in range(0, count):
             cat = Cat(self.mouse, self.map, self.cats)
             self.add(cat)
@@ -117,5 +126,15 @@ class Cats(Group):
         pass
 
     def update(self, *args, **kwargs) -> None:
-
+        self.restore_rects.clear()
+        for cat in self:
+            self.restore_rects.append(cat.rect.copy())
         super().update(*args, **kwargs)
+
+    def predraw(self, surface:Surface) -> None:
+        for rect in self.restore_rects:
+            surface.blit(self.background, rect)
+
+    def draw(self, surface: Surface) -> None:
+        super().draw(surface)
+

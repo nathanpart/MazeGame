@@ -8,7 +8,7 @@ from pygame.surface import Surface
 
 
 MAIN_DIR = os.path.split(os.path.abspath(__file__))[0]
-TILE_FILE = "maze_tiles.png"
+TILE_FILE = "tiles2.png"
 
 DIGIT_FILES = ["numbers_blue.png", "numbers_green.png", "numbers_lt_green.png", "numbers_purple.png",
                "numbers_red.png", "numbers_white.png", "numbers_yellow.png"]

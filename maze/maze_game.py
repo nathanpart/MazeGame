@@ -116,6 +116,7 @@ class MazeGame:
 
             self.screen.fill(BACKGROUND_COLOR)
 
+            self.cats.predraw(self.maze.surface)
             self.mouse.draw(self.maze.surface)
             self.cheese.draw(self.maze.surface)
             self.bones.draw(self.maze.surface)
