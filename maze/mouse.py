@@ -23,16 +23,24 @@ class TheMouse(Critter):
 class Mouse(GroupSingle):
     count: int
     tiles: Tuple[Surface, Rect, Rect, Rect, Rect]
+    restore_rect: Rect
+    back_ground: Surface
 
     def __init__(self, tiles: Tiles, maze_map: MazeMap):
         self.tiles = tiles.mice
         super(Mouse, self).__init__(TheMouse(maze_map, self.tiles))
+        self.restore_rect = Rect(1, 1, 32, 32)
+        self.back_ground = tiles.ground
 
     def update(self, *args, **kwargs) -> bool:
         if self.sprite is None:
             return False
+        self.restore_rect = self.sprite.rect.copy()
         super(Mouse, self).update()
         return True
+
+    def pre_draw(self, surface: Surface):
+        surface.blit(self.back_ground, self.restore_rect)
 
     def mouse_reset(self, maze_map: MazeMap):
         self.add(TheMouse(maze_map, self.tiles))

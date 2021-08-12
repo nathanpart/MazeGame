@@ -81,7 +81,7 @@ class MazeGame:
         exclude_list = [Point(1, 1)]
         self.cheese.new_game(exclude_list, 50)
         self.bones.new_game(exclude_list, 10)
-        self.cats.reset(exclude_list, 1)
+        self.cats.reset(exclude_list, 10)
 
     def game_loop(self):
         self.new_level()
@@ -116,13 +116,14 @@ class MazeGame:
 
             self.screen.fill(BACKGROUND_COLOR)
 
-            self.cats.predraw(self.maze.surface)
-            self.mouse.draw(self.maze.surface)
+            self.mouse.pre_draw(self.maze.surface)
+            self.cats.pre_draw(self.maze.surface)
             self.cheese.draw(self.maze.surface)
             self.bones.draw(self.maze.surface)
+            self.mouse.draw(self.maze.surface)
             self.cats.draw(self.maze.surface)
 
-            self.maze.draw(self.screen, Rect(0, 32, 32, 32), self.cats.sprites()[0].rect)
+            self.maze.draw(self.screen, Rect(0, 32, 32, 32), self.mouse.get_location())
             self.game_state.draw(self.screen, Rect(0, 0, HEAD_WIDTH, HEAD_HEIGHT))
 
             pygame.display.flip()

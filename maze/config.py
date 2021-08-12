@@ -2,8 +2,8 @@ WIDTH = 20
 HEIGHT = 20
 
 # Size of the maze
-MAZE_WIDTH = 101
-MAZE_HEIGHT = 101
+MAZE_WIDTH = 51
+MAZE_HEIGHT = 51
 
 # Size of a tile
 TILE_WIDTH = 32

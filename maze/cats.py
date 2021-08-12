@@ -50,9 +50,30 @@ class Cat(Critter):
                 if self.speed != 0:
                     self.direction = self.map.right_hand_rule(Point(self.column, self.row), self.direction)
                     self.in_transit = True
-                if self.column == mouse.column and self.row == mouse.row:
-                    self.eat_mouse()
+                    # self.find_mouse()
+                    if self.column == mouse.column and self.row == mouse.row:
+                        self.eat_mouse()
         super().update()
+
+    # def find_mouse(self):
+    #     mouse_location = self.mouse_group.sprite.rect
+    #     cat_location = self.rect
+    #     if ((self.direction == WEST) and
+    #             (cat_location.top == mouse_location.top) and
+    #             (mouse_location.left <= cat_location.left <= mouse_location.right)):
+    #         self.eat_mouse()
+    #     elif ((self.direction == NORTH) and
+    #           (cat_location.left == mouse_location.left) and
+    #           (mouse_location.top <= cat_location.top <= mouse_location.bottom)):
+    #         self.eat_mouse()
+    #     elif ((self.direction == EAST) and
+    #           (cat_location.top == mouse_location.top) and
+    #           (mouse_location.left <= (cat_location.right + 2) <= mouse_location.right)):
+    #         self.eat_mouse()
+    #     elif ((self.direction == SOUTH) and
+    #           (cat_location.left == mouse_location.left) and
+    #           (mouse_location.top <= cat_location.bottom <= mouse_location.bottom)):
+    #         self.eat_mouse()
 
     def eat_mouse(self):
         mouse = self.mouse_group.sprite
@@ -131,10 +152,9 @@ class Cats(Group):
             self.restore_rects.append(cat.rect.copy())
         super().update(*args, **kwargs)
 
-    def predraw(self, surface:Surface) -> None:
+    def pre_draw(self, surface: Surface) -> None:
         for rect in self.restore_rects:
             surface.blit(self.background, rect)
 
     def draw(self, surface: Surface) -> None:
         super().draw(surface)
-
