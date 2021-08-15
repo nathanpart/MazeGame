@@ -9,19 +9,20 @@ from pygame.time import Clock
 from maze.cats import Cats
 from maze.config import BOARD_WIDTH, BOARD_HEIGHT, MAZE_WIDTH, MAZE_HEIGHT, BACKGROUND_COLOR, HEAD_WIDTH, HEAD_HEIGHT
 from maze.critters import CritterGroup
+from maze.dog import DogBlew, Dog
 from maze.game_state import GameState
 from maze.items import ItemGroup
 from maze.maze import Maze
 from maze.maze_generate import MazeGenerator, MazeMap, Point
-from maze.mouse import TheMouse
+from maze.mouse import TheMouse, Mouse
 from maze.tiles import Tiles
 
 
 class MazeGame:
     play_game: bool
     maze: Maze
-    mouse: Optional[CritterGroup]
-    dog: Optional[CritterGroup]
+    mouse: Optional[Mouse]
+    dog: Optional[Dog]
     cats: Optional[Cats]
     cheese: Optional[ItemGroup]
     bones: Optional[ItemGroup]
@@ -76,7 +77,7 @@ class MazeGame:
         self.maze.new_maze(self.map)
 
         if self.mouse is None:
-            self.mouse = CritterGroup(self.map, self.tiles.mice, TheMouse)
+            self.mouse = Mouse(self.map, self.tiles.mice, TheMouse)
         else:
             self.mouse.critter_reset(self.map)
 
@@ -102,12 +103,18 @@ class MazeGame:
     def game_loop(self):
         self.new_level()
         self.game_state.new_game()
-
+        dog_counter = 0
+        flash_counter = 0
         self.play_game = True
         while self.play_game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
+
+            if self.is_dog:
+                dog_counter -= 1
+                if dog_counter <= 0:
+                    self.mouse.exit_dog(*self.dog.deactivate())
 
             keys = pygame.key.get_pressed()
             if self.is_dog:
@@ -149,7 +156,12 @@ class MazeGame:
     def update(self):
         self.clear_tiles.clear()
         if self.is_dog:
-            self.dog.update(self.clear_tiles)
+            try:
+                self.dog.update(self.clear_tiles)
+            except DogBlew:
+                # Pop the dog - switch back to mouse and lose a life
+                self.is_dog = False
+                self.mouse.sprite.kill()
         else:
             if not self.mouse.update(self.clear_tiles):
                 if self.next_mouse():
