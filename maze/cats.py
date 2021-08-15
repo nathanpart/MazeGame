@@ -110,7 +110,6 @@ class Cats(Group):
     map: MazeMap
     mouse: Mouse
     background: Surface
-    restore_rects: List[Rect]
 
     def __init__(self, tiles: Tiles, maze_map: MazeMap, mouse: Mouse, *sprites):
         super(Cats, self).__init__()
@@ -119,11 +118,9 @@ class Cats(Group):
         self.map = maze_map
         self.mouse = mouse
         self.background = tiles.ground
-        self.restore_rects = list()
 
     def reset(self, exclude_list: List[Point], count: int):
         self.empty()
-        self.restore_rects.clear()
         for _ in range(0, count):
             cat = Cat(self.mouse, self.map, self.cats)
             self.add(cat)
@@ -147,14 +144,11 @@ class Cats(Group):
         pass
 
     def update(self, *args, **kwargs) -> None:
-        self.restore_rects.clear()
+        restore_tiles = args[0]
+        assert isinstance(restore_tiles, list)
         for cat in self:
-            self.restore_rects.append(cat.rect.copy())
+            restore_tiles.append(cat.rect.copy())
         super().update(*args, **kwargs)
-
-    def pre_draw(self, surface: Surface) -> None:
-        for rect in self.restore_rects:
-            surface.blit(self.background, rect)
 
     def draw(self, surface: Surface) -> None:
         super().draw(surface)

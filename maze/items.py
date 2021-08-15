@@ -26,6 +26,8 @@ class Item(MazeSprite):
 
     def update(self, *args, **kwargs) -> None:
         mouse = args[0]
+        if mouse is None:
+            return
         assert isinstance(mouse, TheMouse)
         if self.column == mouse.column and self.row == mouse.row:
             self.game_state.score += self.score_delta

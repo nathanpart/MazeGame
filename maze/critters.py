@@ -1,10 +1,13 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 from pygame.rect import Rect
+from pygame.sprite import GroupSingle
 from pygame.surface import Surface
 
 from maze.maze_generate import MazeMap, WEST, NORTH, EAST, SOUTH
+from maze.mouse import TheMouse
 from maze.sprites import MazeSprite
+from maze.tiles import Tiles
 
 
 class Critter(MazeSprite):
@@ -90,3 +93,65 @@ class Critter(MazeSprite):
                 self.in_transit = False
                 self.column += [-1, 0, 1, 0][self._direction]
                 self.row += [0, -1, 0, 1][self._direction]
+
+
+class CritterGroup(GroupSingle):
+    tiles: Tuple[Surface, Rect, Rect, Rect, Rect]
+
+    def __init__(self, maze_map: MazeMap, critter: Tuple[Surface, Rect, Rect, Rect, Rect], critter_class):
+        self.tiles = critter
+        self.critter_class = critter_class
+        super().__init__(critter_class(maze_map, self.tiles))
+
+    def update(self, *args, **kwargs) -> bool:
+        restore_tiles = args[0]
+        assert isinstance(restore_tiles, list)
+
+        if self.sprite is None:
+            return False
+        restore_tiles.append(self.sprite.rect.copy())
+        super().update()
+        return True
+
+    def critter_reset(self, maze_map: MazeMap):
+        self.add(self.critter_class(maze_map, self.tiles))
+
+    def get_location(self) -> Optional[Rect]:
+        if self.sprite:
+            assert isinstance(self.sprite, Critter)
+            return self.sprite.rect.copy()
+        return None
+
+    @property
+    def current_loc(self):
+        if self.sprite:
+            assert isinstance(self.sprite, Critter)
+            return self.sprite.current_loc
+        else:
+            return 0, 0
+
+    def move(self, maze_map: MazeMap, x: int, y: int, s_dir: int):
+        s = self.sprite
+        if s:
+            assert isinstance(s, Critter)
+            if s.in_transit:
+                return
+            dir_funcs = [s.move_north, s.move_east, s.move_south, s.move_west]
+            if not maze_map.is_wall(x, y):
+                dir_funcs[s_dir]()
+
+    def move_up(self, maze_map: MazeMap):
+        x, y = self.current_loc
+        self.move(maze_map, x, y - 1, 0)
+
+    def move_down(self, maze_map: MazeMap):
+        x, y = self.current_loc
+        self.move(maze_map, x, y + 1, 2)
+
+    def move_left(self, maze_map: MazeMap):
+        x, y = self.current_loc
+        self.move(maze_map, x - 1, y, 3)
+
+    def move_right(self, maze_map: MazeMap):
+        x, y = self.current_loc
+        self.move(maze_map, x + 1, y, 1)
