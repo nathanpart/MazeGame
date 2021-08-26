@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pygame
 from pygame.rect import Rect
 from pygame.sprite import AbstractGroup
 
 from maze.maze_generate import MazeMap
+
+if TYPE_CHECKING:
+    from maze_game import MazeGame
 
 
 class MazeSprite(pygame.sprite.Sprite):
@@ -11,14 +18,18 @@ class MazeSprite(pygame.sprite.Sprite):
     """
     _column: int
     _row: int
-    map: MazeMap
+    game: MazeGame
 
-    def __init__(self, maze_map: MazeMap, *groups: AbstractGroup) -> None:
+    @property
+    def maze_map(self) -> MazeMap:
+        return self.game.map
+
+    def __init__(self, game: MazeGame, *groups: AbstractGroup) -> None:
         super().__init__(*groups)
         self._column = 0
         self._row = 0
         self.rect = Rect(0, 0, 32, 32)
-        self.map = maze_map
+        self.game = game
 
     def _compute_location(self):
         """
@@ -51,5 +62,3 @@ class MazeSprite(pygame.sprite.Sprite):
     def row(self, value):
         self._row = value
         self._compute_location()
-
-
